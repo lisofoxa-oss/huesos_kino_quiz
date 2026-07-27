@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>КИНО-КВИЗ ДЛЯ ЁБАНЫХ ДЕГЕНЕРАТОВ</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+    :root {
+      --bg: #0a0a12;
+      --bg-card: #151520;
+      --accent: #e94560;
+      --gold: #ffd700;
+      --success: #4ecca3;
+      --danger: #ff4757;
+      --text: #f0f0f0;
+      --text-dim: #888;
+      --border: #2a2a3a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+      padding: 20px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.5s ease;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      background: linear-gradient(45deg, var(--accent), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-dim);
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 1rem;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      color: var(--text);
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Roboto', sans-serif;
+      margin: 8px;
+      min-width: 200px;
+      text-align: center;
+    }
+    .btn:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(233, 69, 96, 0.3);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #c23a51);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    .btn-primary:hover {
+      box-shadow: 0 5px 25px rgba(233, 69, 96, 0.5);
+    }
+    .btn-gold {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    .btn-gold:hover {
+      background: rgba(255, 215, 0, 0.1);
+      box-shadow: 0 5px 20px rgba(255, 215, 0, 0.2);
+    }
+
+    .gender-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .gender-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 160px;
+    }
+    .gender-card:hover {
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+    .gender-card .icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+    .gender-card .label {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.3rem;
+    }
+
+    .levels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
+      margin-top: 20px;
+    }
+
+    .level-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .level-card:hover:not(.locked) {
+      border-color: var(--accent);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(233, 69, 96, 0.2);
+    }
+    .level-card.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(0.8);
+    }
+    .level-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .level-card .name {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.4rem;
+      margin-bottom: 5px;
+    }
+    .level-card .desc {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+    .level-card .lock-icon {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 1.5rem;
+    }
+
+    .game-header {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px 20px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .game-header .stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.2rem;
+    }
+    .game-header .stat .label { color: var(--text-dim); font-size: 0.9rem; }
+    .game-header .timer { color: var(--accent); }
+    .game-header .lives { color: var(--danger); }
+    .game-header .score { color: var(--gold); }
+
+    .question-box {
+      width: 100%;
+      max-width: 800px;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .question-box .progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      border-radius: 20px 0 0 0;
+      transition: width 0.3s ease;
+    }
+    .question-box .meta {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-bottom: 15px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .question-box .description {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .question-box .hint-box {
+      display: none;
+      background: rgba(255, 215, 0, 0.1);
+      border-left: 3px solid var(--gold);
+      padding: 12px 15px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 15px;
+      font-size: 0.95rem;
+      color: var(--gold);
+    }
+    .question-box .hint-box.show { display: block; }
+
+    .answers-grid {
+      width: 100%;
+      max-width: 800px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    .answers-grid .btn {
+      min-width: auto;
+      margin: 0;
+      padding: 20px;
+      font-size: 1rem;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+    .answers-grid .btn.correct {
+      border-color: var(--success);
+      background: rgba(78, 204, 163, 0.15);
+      animation: pulseCorrect 0.5s ease;
+    }
+    .answers-grid .btn.wrong {
+      border-color: var(--danger);
+      background: rgba(255, 71, 87, 0.15);
+      animation: shake 0.5s ease;
+    }
+    @keyframes pulseCorrect {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-10px); }
+      40% { transform: translateX(10px); }
+      60% { transform: translateX(-10px); }
+      80% { transform: translateX(10px); }
+    }
+
+    .feedback {
+      width: 100%;
+      max-width: 800px;
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+      text-align: center;
+      display: none;
+    }
+    .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+    .feedback.correct { background: rgba(78, 204, 163, 0.15); border: 1px solid var(--success); color: var(--success); }
+    .feedback.wrong { background: rgba(255, 71, 87, 0.15); border: 1px solid var(--danger); color: var(--danger); }
+    .feedback.timeout { background: rgba(255, 215, 0, 0.1); border: 1px solid var(--gold); color: var(--gold); }
+
+    .controls {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    .result-box {
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+    .result-box .result-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+    .result-box .result-score {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    .result-box .result-sub {
+      color: var(--text-dim);
+      margin-bottom: 30px;
+    }
+
+    .radar-container {
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 30px;
+      position: relative;
+    }
+    .radar-container canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .stat-bars {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto 30px;
+    }
+    .stat-bar {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+    .stat-bar .label {
+      width: 100px;
+      text-align: right;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+    .stat-bar .bar-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .stat-bar .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+    .stat-bar .value {
+      width: 40px;
+      text-align: left;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .phrase-box {
+      font-style: italic;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+      padding: 15px;
+      border-left: 3px solid var(--accent);
+      text-align: left;
+      max-width: 600px;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+      .answers-grid { grid-template-columns: 1fr; }
+      .game-header { flex-wrap: wrap; gap: 10px; }
+      .levels-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Экран выбора пола -->
+  <div id="screen-gender" class="screen active">
+    <h1>КИНО-КВИЗ</h1>
+    <p class="subtitle">Для ёбаных дегенератов, которые просрали жизнь на кино</p>
+    <p style="margin-bottom:30px; color: var(--text-dim);">Как с тобой разговаривать?</p>
+    <div class="gender-grid">
+      <div class="gender-card" onclick="selectGender('male')">
+        <div class="icon">👨</div>
+        <div class="label">БРАТАН</div>
+        <div style="color: var(--text-dim); font-size: 0.85rem; margin-top: 5px;">Грубо, честно, по-мужски</div>
+      </div>
+      <div class="gender-card" onclick="selectGender('female')">
+        <div class="icon">👩</div>
+        <div class="label">КРОШКА</div>
+        <div style="color: var(--text-dim); font-size: 0.85rem; margin-top: 5px;">Мягко, но с характером</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Экран выбора уровня -->
+  <div id="screen-levels" class="screen">
+    <h1>ВЫБЕРИ УРОВЕНЬ</h1>
+    <p class="subtitle" id="level-subtitle">Загрузка...</p>
+    <div class="levels-grid" id="levels-container">
+      <!-- Заполняется JS -->
+    </div>
+  </div>
+
+  <!-- Экран игры -->
+  <div id="screen-game" class="screen">
+    <div class="game-header">
+      <div class="stat timer">
+        <span class="label">ВРЕМЯ</span>
+        <span id="timer-value">20</span>s
+      </div>
+      <div class="stat lives">
+        <span class="label">ЖИЗНИ</span>
+        <span id="lives-value">❤️❤️❤️</span>
+      </div>
+      <div class="stat score">
+        <span class="label">СЧЁТ</span>
+        <span id="score-value">0/10</span>
+      </div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="question-box">
+      <div class="progress" id="progress-bar" style="width: 0%"></div>
+      <div class="meta" id="question-meta"></div>
+      <div class="description" id="question-text">Загрузка вопроса...</div>
+      <div class="hint-box" id="hint-box"></div>
+    </div>
+
+    <div class="answers-grid" id="answers-container">
+      <!-- Кнопки ответов -->
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-gold" onclick="showHint()" id="hint-btn">💡 Подсказка (3)</button>
+      <button class="btn" onclick="backToLevels()">🏠 В меню</button>
+    </div>
+  </div>
+
+  <!-- Экран результатов -->
+  <div id="screen-result" class="screen">
+    <div class="result-box">
+      <div class="result-title" id="result-title">ИТОГ</div>
+      <div class="phrase-box" id="result-phrase"></div>
+      <div class="result-score" id="result-score">0/10</div>
+      <div class="result-sub" id="result-sub"></div>
+
+      <div class="radar-container">
+        <canvas id="radar-canvas" width="300" height="300"></canvas>
+      </div>
+
+      <div class="stat-bars" id="stat-bars"></div>
+
+      <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-primary" onclick="restartLevel()">🔄 Ещё раз</button>
+        <button class="btn" onclick="backToLevels()">📋 Уровни</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== ДАННЫЕ ====================
+    const LEVELS = [
+      { id: 'popcorn', icon: '🍿', name: 'Поп-корн', desc: 'Фильмы, которые знает каждый. Блокбастеры, мемы, база.', file: 'data_popcorn.json', unlocked: true },
+      { id: 'kinoman', icon: '🎞️', name: 'Киноман', desc: 'Авторское кино. Тарантино, Кубрик, Скорсезе. Обязан знать.', file: 'data_kinoman.json', unlocked: false },
+      { id: 'arthouse', icon: '🎭', name: 'Арт-хаус', desc: 'Европа, Азия, неочевидное. Для избранных психов.', file: 'data_arthouse.json', unlocked: false },
+      { id: 'ussr', icon: '☭', name: 'СССР / Постсовет', desc: 'Отдельный пласт культуры. Либо знаешь, либо нет.', file: 'data_ussr.json', unlocked: false },
+      { id: 'brutal', icon: '🔪', name: 'Брутальный 18+', desc: 'Жёсткое, травматичное, спорное. Не для всех желудков.', file: 'data_brutal.json', unlocked: false }
+    ];
+
+    const TAG_WEIGHTS = {
+      violence: { axis: 'Жестокость', weight: 1 },
+      dark: { axis: 'Мрачность', weight: 1 },
+      mindfuck: { axis: 'Мозголомность', weight: 1 },
+      nsfw: { axis: 'Пошлость', weight: 1 },
+      erotic: { axis: 'Пошлость', weight: 0.8 },
+      classic: { axis: 'Ностальгия', weight: 0.7 },
+      nostalgia: { axis: 'Ностальгия', weight: 1 },
+      old: { axis: 'Ностальгия', weight: 0.8 },
+      '80s': { axis: 'Ностальгия', weight: 0.6 },
+      '90s': { axis: 'Ностальгия', weight: 0.5 }
+    };
+
+    // ==================== СОСТОЯНИЕ ====================
+    let state = {
+      gender: 'male',
+      phrases: null,
+      currentLevel: null,
+      questions: [],
+      currentIndex: 0,
+      lives: 3,
+      score: 0,
+      timer: 20,
+      timerInterval: null,
+      hintsLeft: 3,
+      stats: { 'Жестокость': 0, 'Мрачность': 0, 'Мозголомность': 0, 'Ностальгия': 0, 'Пошлость': 0 },
+      correctAnswers: []
+    };
+
+    let levelData = {};
+
+    // ==================== УТИЛИТЫ ====================
+    function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // ==================== ЗАГРУЗКА ====================
+    async function loadJSON(file) {
+      try {
+        const res = await fetch(file);
+        return await res.json();
+      } catch (e) {
+        console.error('Ошибка загрузки', file, e);
+        return null;
+      }
+    }
+
+    async function init() {
+      state.phrases = await loadJSON('phrases.json');
+      // Загружаем все доступные уровни
+      for (const lvl of LEVELS) {
+        if (lvl.unlocked) {
+          const data = await loadJSON(lvl.file);
+          if (data) levelData[lvl.id] = data;
+        }
+      }
+    }
+
+    init();
+
+    // ==================== ВЫБОР ПОЛА ====================
+    function selectGender(gender) {
+      state.gender = gender;
+      const p = state.phrases[gender];
+      document.getElementById('level-subtitle').textContent = rand(p.welcome);
+      renderLevels();
+      showScreen('screen-levels');
+    }
+
+    // ==================== УРОВНИ ====================
+    function renderLevels() {
+      const container = document.getElementById('levels-container');
+      container.innerHTML = '';
+      for (const lvl of LEVELS) {
+        const card = document.createElement('div');
+        card.className = 'level-card' + (lvl.unlocked ? '' : ' locked');
+        card.innerHTML = `
+          <div class="icon">${lvl.icon}</div>
+          <div class="name">${lvl.name}</div>
+          <div class="desc">${lvl.desc}</div>
+          ${!lvl.unlocked ? '<div class="lock-icon">🔒</div>' : ''}
+        `;
+        if (lvl.unlocked) {
+          card.onclick = () => startLevel(lvl.id);
+        }
+        container.appendChild(card);
+      }
+    }
+
+    function backToLevels() {
+      clearInterval(state.timerInterval);
+      renderLevels();
+      showScreen('screen-levels');
+    }
+
+    // ==================== ИГРА ====================
+    async function startLevel(levelId) {
+      if (!levelData[levelId]) {
+        const data = await loadJSON(LEVELS.find(l => l.id === levelId).file);
+        if (!data) { alert('Не удалось загрузить уровень'); return; }
+        levelData[levelId] = data;
+      }
+
+      const allQuestions = levelData[levelId].questions;
+      state.currentLevel = levelId;
+      state.questions = shuffle(allQuestions).slice(0, Math.min(10, allQuestions.length));
+      state.currentIndex = 0;
+      state.lives = 3;
+      state.score = 0;
+      state.hintsLeft = 3;
+      state.stats = { 'Жестокость': 0, 'Мрачность': 0, 'Мозголомность': 0, 'Ностальгия': 0, 'Пошлость': 0 };
+      state.correctAnswers = [];
+
+      const p = state.phrases[state.gender];
+      showFeedback(rand(p.start_level), 'correct');
+
+      setTimeout(() => {
+        hideFeedback();
+        showQuestion();
+      }, 1500);
+
+      showScreen('screen-game');
+    }
+
+    function showQuestion() {
+      if (state.currentIndex >= state.questions.length) {
+        endGame(true);
+        return;
+      }
+      if (state.lives <= 0) {
+        endGame(false);
+        return;
+      }
+
+      const q = state.questions[state.currentIndex];
+      document.getElementById('question-meta').innerHTML = `
+        <span>🎬 ${q.year}</span>
+        <span>🎭 ${q.director}</span>
+        <span>Вопрос ${state.currentIndex + 1} из ${state.questions.length}</span>
+      `;
+      document.getElementById('question-text').textContent = q.description;
+      document.getElementById('hint-box').classList.remove('show');
+      document.getElementById('hint-box').textContent = '';
+      document.getElementById('hint-btn').textContent = `💡 Подсказка (${state.hintsLeft})`;
+      document.getElementById('hint-btn').disabled = state.hintsLeft <= 0;
+      document.getElementById('hint-btn').style.opacity = state.hintsLeft <= 0 ? '0.5' : '1';
+
+      // Прогресс
+      const progress = (state.currentIndex / state.questions.length) * 100;
+      document.getElementById('progress-bar').style.width = progress + '%';
+
+      // Варианты ответов
+      const otherTitles = state.questions
+        .filter(qq => qq.id !== q.id)
+        .map(qq => qq.title);
+      const wrongAnswers = shuffle(otherTitles).slice(0, 3);
+      const answers = shuffle([q.title, ...wrongAnswers]);
+
+      const container = document.getElementById('answers-container');
+      container.innerHTML = '';
+      answers.forEach(ans => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.textContent = ans;
+        btn.onclick = () => handleAnswer(ans, q.title, btn);
+        container.appendChild(btn);
+      });
+
+      updateHeader();
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(state.timerInterval);
+      state.timer = 20;
+      updateTimerDisplay();
+      state.timerInterval = setInterval(() => {
+        state.timer--;
+        updateTimerDisplay();
+        if (state.timer <= 0) {
+          clearInterval(state.timerInterval);
+          handleTimeout();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const el = document.getElementById('timer-value');
+      el.textContent = state.timer;
+      el.style.color = state.timer <= 5 ? 'var(--danger)' : (state.timer <= 10 ? 'var(--gold)' : 'var(--accent)');
+    }
+
+    function updateHeader() {
+      document.getElementById('lives-value').textContent = '❤️'.repeat(state.lives) + '🖤'.repeat(3 - state.lives);
+      document.getElementById('score-value').textContent = `${state.score}/${state.questions.length}`;
+    }
+
+    function showHint() {
+      if (state.hintsLeft <= 0) return;
+      state.hintsLeft--;
+      const q = state.questions[state.currentIndex];
+      const p = state.phrases[state.gender];
+      const hintText = p.hint[0].replace('{hint}', q.hint);
+      document.getElementById('hint-box').textContent = hintText;
+      document.getElementById('hint-box').classList.add('show');
+      document.getElementById('hint-btn').textContent = `💡 Подсказка (${state.hintsLeft})`;
+      if (state.hintsLeft <= 0) {
+        document.getElementById('hint-btn').disabled = true;
+        document.getElementById('hint-btn').style.opacity = '0.5';
+      }
+    }
+
+    function handleAnswer(selected, correct, btnElement) {
+      clearInterval(state.timerInterval);
+      const buttons = document.querySelectorAll('#answers-container .btn');
+      buttons.forEach(b => b.disabled = true);
+
+      const p = state.phrases[state.gender];
+
+      if (selected === correct) {
+        btnElement.classList.add('correct');
+        state.score++;
+        state.correctAnswers.push(state.questions[state.currentIndex]);
+        updateStats(state.questions[state.currentIndex]);
+        showFeedback(rand(p.correct), 'correct');
+      } else {
+        btnElement.classList.add('wrong');
+        buttons.forEach(b => { if (b.textContent === correct) b.classList.add('correct'); });
+        state.lives--;
+        const msg = rand(p.wrong).replace('{answer}', correct);
+        showFeedback(msg, 'wrong');
+      }
+
+      updateHeader();
+
+      setTimeout(() => {
+        hideFeedback();
+        state.currentIndex++;
+        if (state.lives <= 0) {
+          endGame(false);
+        } else {
+          showQuestion();
+        }
+      }, 2000);
+    }
+
+    function handleTimeout() {
+      const buttons = document.querySelectorAll('#answers-container .btn');
+      buttons.forEach(b => b.disabled = true);
+      const correct = state.questions[state.currentIndex].title;
+      buttons.forEach(b => { if (b.textContent === correct) b.classList.add('correct'); });
+
+      state.lives--;
+      const p = state.phrases[state.gender];
+      const msg = rand(p.timeout).replace('{answer}', correct);
+      showFeedback(msg, 'timeout');
+      updateHeader();
+
+      setTimeout(() => {
+        hideFeedback();
+        state.currentIndex++;
+        if (state.lives <= 0) {
+          endGame(false);
+        } else {
+          showQuestion();
+        }
+      }, 2500);
+    }
+
+    function showFeedback(text, type) {
+      const el = document.getElementById('feedback');
+      el.textContent = text;
+      el.className = 'feedback show ' + type;
+    }
+
+    function hideFeedback() {
+      document.getElementById('feedback').classList.remove('show');
+    }
+
+    // ==================== СТАТИСТИКА ====================
+    function updateStats(question) {
+      if (!question.tags) return;
+      for (const tag of question.tags) {
+        const w = TAG_WEIGHTS[tag];
+        if (w) {
+          state.stats[w.axis] += w.weight;
+        }
+      }
+    }
+
+    function getNormalizedStats() {
+      const maxVal = 5; // максимум за 10 вопросов
+      const result = {};
+      for (const [axis, val] of Object.entries(state.stats)) {
+        result[axis] = Math.min(100, Math.round((val / maxVal) * 100));
+      }
+      return result;
+    }
+
+    // ==================== КОНЕЦ ИГРЫ ====================
+    function endGame(win) {
+      clearInterval(state.timerInterval);
+      const p = state.phrases[state.gender];
+      const title = win ? rand(p.game_over_win) : rand(p.game_over_lose);
+
+      document.getElementById('result-title').textContent = win ? 'ПОБЕДА!' : 'ПРОИГРЫШ';
+      document.getElementById('result-title').style.color = win ? 'var(--success)' : 'var(--danger)';
+      document.getElementById('result-phrase').textContent = title;
+      document.getElementById('result-score').textContent = `${state.score}/${state.questions.length}`;
+      document.getElementById('result-score').style.color = win ? 'var(--success)' : 'var(--danger)';
+
+      const percent = Math.round((state.score / state.questions.length) * 100);
+      let sub = '';
+      if (percent === 100) sub = 'Идеально! Ты либо читер, либо бог.';
+      else if (percent >= 80) sub = 'Очень круто. Ты точно не случайный прохожий.';
+      else if (percent >= 60) sub = 'Неплохо. База есть, но есть куда расти.';
+      else if (percent >= 40) sub = 'Среднячок. Смотри больше фильмов, меньше тиктока.';
+      else sub = 'Пиздец. Тебе нужен киномарафон, а не квиз.';
+      document.getElementById('result-sub').textContent = sub;
+
+      // Радар
+      const stats = getNormalizedStats();
+      drawRadar(stats);
+      renderStatBars(stats);
+
+      showScreen('screen-result');
+    }
+
+    function restartLevel() {
+      startLevel(state.currentLevel);
+    }
+
+    // ==================== РАДАР ====================
+    function drawRadar(stats) {
+      const canvas = document.getElementById('radar-canvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const radius = 100;
+      const axes = Object.keys(stats);
+      const count = axes.length;
+      const angleStep = (Math.PI * 2) / count;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Сетка
+      ctx.strokeStyle = '#2a2a3a';
+      ctx.lineWidth = 1;
+      for (let r = 1; r <= 4; r++) {
+        ctx.beginPath();
+        for (let i = 0; i <= count; i++) {
+          const angle = i * angleStep - Math.PI / 2;
+          const x = cx + Math.cos(angle) * (radius * r / 4);
+          const y = cy + Math.sin(angle) * (radius * r / 4);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      // Оси
+      for (let i = 0; i < count; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
+        ctx.stroke();
+
+        // Подписи
+        const labelX = cx + Math.cos(angle) * (radius + 20);
+        const labelY = cy + Math.sin(angle) * (radius + 20);
+        ctx.fillStyle = '#888';
+        ctx.font = '12px Roboto';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(axes[i], labelX, labelY);
+      }
+
+      // Данные
+      ctx.beginPath();
+      const values = Object.values(stats);
+      for (let i = 0; i <= count; i++) {
+        const idx = i % count;
+        const angle = idx * angleStep - Math.PI / 2;
+        const val = values[idx] / 100;
+        const x = cx + Math.cos(angle) * (radius * val);
+        const y = cy + Math.sin(angle) * (radius * val);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.fillStyle = 'rgba(233, 69, 96, 0.3)';
+      ctx.fill();
+      ctx.strokeStyle = 'var(--accent)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Точки
+      for (let i = 0; i < count; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        const val = values[i] / 100;
+        const x = cx + Math.cos(angle) * (radius * val);
+        const y = cy + Math.sin(angle) * (radius * val);
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'var(--gold)';
+        ctx.fill();
+      }
+    }
+
+    function renderStatBars(stats) {
+      const container = document.getElementById('stat-bars');
+      container.innerHTML = '';
+      const colors = {
+        'Жестокость': '#ff4757',
+        'Мрачность': '#a29bfe',
+        'Мозголомность': '#74b9ff',
+        'Ностальгия': '#fdcb6e',
+        'Пошлость': '#e17055'
+      };
+      for (const [axis, val] of Object.entries(stats)) {
+        const bar = document.createElement('div');
+        bar.className = 'stat-bar';
+        bar.innerHTML = `
+          <div class="label">${axis}</div>
+          <div class="bar-bg"><div class="bar-fill" style="width: 0%; background: ${colors[axis] || '#e94560'}"></div></div>
+          <div class="value">${val}%</div>
+        `;
+        container.appendChild(bar);
+        setTimeout(() => {
+          bar.querySelector('.bar-fill').style.width = val + '%';
+        }, 100);
+      }
+    }
+  </script>
+</body>
+</html>
